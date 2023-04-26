@@ -31,7 +31,11 @@ router.get("/credit-data/:ssn", (req, res) => {
 
       res.send(result);
     } catch (error) {
-      console.log(error);
+      if (error.response.status === 404) {
+        res.status(404).send("SSN not found");
+      } else {
+        res.status(error.response.status).send(error.response.status);
+      }
     }
   })();
 });
