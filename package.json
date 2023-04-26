@@ -2,8 +2,8 @@
   "name": "lookup-service-level-1",
   "version": "1.0.0",
   "scripts": {
-    "build": "echo build your app here",
-    "start": "echo start your app here",
+    "build": "cd app && npm run build",
+    "start": "cd app && npm run start",
     "test": "cypress run"
   },
   "devDependencies": {
