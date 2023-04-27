@@ -2,32 +2,14 @@ const express = require("express");
 const axios = require("axios");
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
+const insertData = require("./services/databaseService").insertData;
+const openConnection = require("./services/databaseService").openConnection;
+const createTable = require("./services/databaseService").createTable;
+const selectData = require("./services/databaseService").selectData;
 
-// open the database connection
-const db = new sqlite3.Database("mydatabase.db", (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log("Connected to the database.");
-  }
-});
+const db = openConnection();
 
-// create a table if it doesn't exist
-db.run(
-  `
-  CREATE TABLE IF NOT EXISTS credit_data (
-    ssn TEXT PRIMARY KEY,
-    data TEXT
-  )
-`,
-  (err) => {
-    if (err) {
-      console.error(err.message);
-    } else {
-      console.log("Credit data table created.");
-    }
-  }
-);
+createTable(db);
 
 router.get("/ping", (req, res) => {
   res.send({
@@ -41,13 +23,9 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
 
   (async () => {
     try {
-      const rows = await new Promise((resolve, reject) => {
-        db.all("SELECT * FROM credit_data WHERE ssn = ?", ssn, (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        });
-      });
-
+      console.log("inside router");
+      const rows = await selectData(db, ssn);
+      console.log(rows);
       if (rows.length > 0) {
         console.log("data is found");
         const data = JSON.parse(rows[0].data);
@@ -69,21 +47,18 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
         );
         result = { ...result, ...debtResponse.data };
 
-        db.run(
-          "INSERT INTO credit_data (ssn, data) VALUES (?, ?)",
-          [ssn, JSON.stringify(result)],
-          (err) => {
-            if (err) {
-              console.error(err.message);
-              creditDataResponse
-                .status(500)
-                .send("Error saving data to database");
-            } else {
-              console.log();
-              creditDataResponse.send(result);
-            }
+        const completeCallBack = (err) => {
+          if (err) {
+            console.error(err.message);
+            creditDataResponse
+              .status(500)
+              .send("Error saving data to database");
+          } else {
+            console.log();
+            creditDataResponse.send(result);
           }
-        );
+        };
+        insertData(db, ssn, result, completeCallBack);
       }
     } catch (error) {
       console.log("error:", error);
