@@ -26,23 +26,21 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
         creditDataResponse.send(data);
       } else {
         console.log(" no data in db");
+        
         const personalDetailsresponse = await getCreditDataService(
           "personal-details",
           ssn
         );
         result = { ...personalDetailsresponse.data };
-        console.log(result);
-
+   
         const assessedIncomeResponse = await getCreditDataService(
           "assessed-income",
           ssn
         );
         result = { ...result, ...assessedIncomeResponse.data };
-          console.log(result);
 
         const debtResponse = await getCreditDataService("debt", ssn);
         result = { ...result, ...debtResponse.data };
-        console.log(result);
 
         const completeCallBack = (err) => {
           if (err) {
@@ -51,7 +49,6 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
               .status(500)
               .send("Error saving data to database");
           } else {
-            console.log();
             creditDataResponse.send(result);
           }
         };
