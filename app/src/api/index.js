@@ -3,6 +3,7 @@ const axios = require("axios");
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
 const { databaseService } = require("./services/databaseService");
+const getCreditDataService = require("./services/getCreditDataService");
 
 databaseService.createTable();
 
@@ -25,20 +26,23 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
         creditDataResponse.send(data);
       } else {
         console.log(" no data in db");
-        const personalDetailsresponse = await axios.get(
-          `https://infra.devskills.app/api/credit-data/personal-details/${ssn}`
+        const personalDetailsresponse = await getCreditDataService(
+          "personal-details",
+          ssn
         );
         result = { ...personalDetailsresponse.data };
+        console.log(result);
 
-        const assessedIncomeResponse = await axios.get(
-          `https://infra.devskills.app/api/credit-data/assessed-income/${ssn}`
+        const assessedIncomeResponse = await getCreditDataService(
+          "assessed-income",
+          ssn
         );
         result = { ...result, ...assessedIncomeResponse.data };
+          console.log(result);
 
-        const debtResponse = await axios.get(
-          `https://infra.devskills.app/api/credit-data/debt/${ssn}`
-        );
+        const debtResponse = await getCreditDataService("debt", ssn);
         result = { ...result, ...debtResponse.data };
+        console.log(result);
 
         const completeCallBack = (err) => {
           if (err) {
