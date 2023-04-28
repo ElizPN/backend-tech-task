@@ -2,14 +2,9 @@ const express = require("express");
 const axios = require("axios");
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
-const insertData = require("./services/databaseService").insertData;
-const openConnection = require("./services/databaseService").openConnection;
-const createTable = require("./services/databaseService").createTable;
-const selectData = require("./services/databaseService").selectData;
+const { databaseService } = require("./services/databaseService");
 
-const db = openConnection();
-
-createTable(db);
+databaseService.createTable();
 
 router.get("/ping", (req, res) => {
   res.send({
@@ -23,9 +18,7 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
 
   (async () => {
     try {
-      console.log("inside router");
-      const rows = await selectData(db, ssn);
-      console.log(rows);
+      const rows = await databaseService.selectData(ssn);
       if (rows.length > 0) {
         console.log("data is found");
         const data = JSON.parse(rows[0].data);
@@ -58,7 +51,7 @@ router.get("/credit-data/:ssn", (req, creditDataResponse) => {
             creditDataResponse.send(result);
           }
         };
-        insertData(db, ssn, result, completeCallBack);
+        databaseService.insertData(ssn, result, completeCallBack);
       }
     } catch (error) {
       console.log("error:", error);
