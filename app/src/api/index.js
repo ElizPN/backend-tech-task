@@ -1,9 +1,7 @@
 const express = require("express");
-const axios = require("axios");
 const router = express.Router();
-const sqlite3 = require("sqlite3").verbose();
+const { creditDataController } = require("./controllers/creditDataController");
 const { databaseService } = require("./services/databaseService");
-const getCreditDataService = require("./services/getCreditDataService");
 
 databaseService.createTable();
 
@@ -13,59 +11,10 @@ router.get("/ping", (req, res) => {
   });
 });
 
-router.get("/credit-data/:ssn", (req, creditDataResponse) => {
+router.get("/credit-data/:ssn", (req, res) => {
   const ssn = req.params.ssn;
-  let result = {};
 
-  (async () => {
-    try {
-      const rows = await databaseService.selectData(ssn);
-      if (rows.length > 0) {
-        console.log("data is found");
-        const data = JSON.parse(rows[0].data);
-        creditDataResponse.send(data);
-      } else {
-        console.log(" no data in db");
-        
-        const personalDetailsresponse = await getCreditDataService(
-          "personal-details",
-          ssn
-        );
-        result = { ...personalDetailsresponse.data };
-   
-        const assessedIncomeResponse = await getCreditDataService(
-          "assessed-income",
-          ssn
-        );
-        result = { ...result, ...assessedIncomeResponse.data };
-
-        const debtResponse = await getCreditDataService("debt", ssn);
-        result = { ...result, ...debtResponse.data };
-
-        const completeCallBack = (err) => {
-          if (err) {
-            console.error(err.message);
-            creditDataResponse
-              .status(500)
-              .send("Error saving data to database");
-          } else {
-            creditDataResponse.send(result);
-          }
-        };
-        databaseService.insertData(ssn, result, completeCallBack);
-      }
-    } catch (error) {
-      console.log("error:", error);
-
-      if (error.response.status === 404) {
-        creditDataResponse.status(404).send("SSN not found");
-      } else {
-        creditDataResponse
-          .status(error.response.status)
-          .send(error.response.status);
-      }
-    }
-  })();
+  creditDataController(ssn, res);
 });
 
 module.exports = router;
