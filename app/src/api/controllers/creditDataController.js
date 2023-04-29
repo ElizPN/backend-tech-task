@@ -1,4 +1,3 @@
-
 async function creditDataController(
   databaseService,
   getCreditData,
@@ -6,6 +5,7 @@ async function creditDataController(
   creditDataResponse
 ) {
   let result = {};
+  // check if cached data exists in db
   const rows = await databaseService.selectData(ssn);
 
   if (rows.length > 0) {
@@ -14,7 +14,7 @@ async function creditDataController(
     creditDataResponse.send(data);
   } else {
     try {
-      console.log(" no data in db");
+      console.log("no data in db");
       const personalDetailsresponse = await getCreditData(
         "personal-details",
         ssn
@@ -30,25 +30,21 @@ async function creditDataController(
       const debtResponse = await getCreditData("debt", ssn);
       result = { ...result, ...debtResponse.data };
     } catch (error) {
-      console.log("http error:", error);
+      console.error(error)
       if (error.response.status === 404) {
+        console.log("http error:", error);
         creditDataResponse.status(404).send("SSN not found");
+        return;
       } else {
         creditDataResponse
           .status(error.response.status)
           .send(error.response.status);
       }
     }
+    creditDataResponse.send(result);
 
-    const completeCallBack = (err) => {
-      if (err) {
-        console.error(err.message);
-        creditDataResponse.status(500).send("Error saving data to database");
-      } else {
-        creditDataResponse.send(result);
-      }
-    };
-    databaseService.insertData(ssn, result, completeCallBack);
+    // cache data to db
+    databaseService.insertData(ssn, result);
   }
 }
 
