@@ -1,4 +1,4 @@
-# Backend tech task: Lookup Service - Level 2
+# Backend tech task:
 
 Main domain logic is in `creditDataController.js` .
 
