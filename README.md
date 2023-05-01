@@ -22,3 +22,6 @@ Completed Task Requirements:
 - Included a unit test for the module to ensure it works as expected.
 - Implemented DB caching by storing the data in an SQLite database and serving subsequent requests from the database.
 
+## Logic:
+
+<img src="./assets/logic.png" title="Logic Diagram">
